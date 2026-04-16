@@ -254,7 +254,6 @@ export default function AdminDashboard() {
                )}
 
                <div className={cn("grid grid-cols-12 gap-6 pb-20", view === "performance" && "hidden")}>
-0">
                   {/* Case History / Pipeline */}
                   <GlassCard className={cn("p-0 border-white/5 bg-white/[0.01] overflow-hidden transition-all duration-500", view === "history" || activePractitioner ? "col-span-12" : "col-span-8")}>
                       <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
