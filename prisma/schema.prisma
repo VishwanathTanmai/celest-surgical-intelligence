@@ -1,0 +1,200 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Hospital {
+  id              String   @id @default(uuid())
+  name            String
+  location        String?
+  
+  // Hierarchy
+  parentId        String?
+  parent          Hospital? @relation("Hierarchy", fields: [parentId], references: [id])
+  subHospitals    Hospital[] @relation("Hierarchy")
+  
+  users           User[]
+  patients        Patient[]
+  inventory       InventoryItem[]
+  auditLogs       AuditLog[]
+  roles           Role[]
+  
+  createdAt       DateTime @default(now())
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String   // "Surgeon", "Forensic Auditor", "Billing Officer"
+  permissions String   @default("[]") // JSON string of permission keys: ["cases:read", "inventory:update"]
+  
+  hospitalId  String
+  hospital    Hospital @relation(fields: [hospitalId], references: [id])
+  users       User[]
+  
+  createdAt   DateTime @default(now())
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  password     String   // Hashed
+  name         String
+  role         String   @default("DOCTOR") // LEGACY: ADMIN, DOCTOR
+  
+  // Fine-Grained RBAC
+  roleId       String?
+  customRole   Role?    @relation(fields: [roleId], references: [id])
+  
+  department   String   @default("General Surgery")
+  peerRating   Float    @default(5.0)
+  hospitalId   String
+  hospital     Hospital @relation(fields: [hospitalId], references: [id])
+  
+  cases        Case[]
+  jobs         Job[]
+  appointments Appointment[]
+  auditLogs    AuditLog[]
+  
+  createdAt    DateTime @default(now())
+}
+
+model Patient {
+  id                String   @id @default(uuid())
+  name              String
+  mrn               String   @unique
+  age               Int?     
+  gender            String?
+  bloodGroup        String?
+  insuranceProvider String?
+  hospitalId        String
+  hospital          Hospital @relation(fields: [hospitalId], references: [id])
+  
+  cases             Case[]
+  appointments      Appointment[]
+  
+  createdAt         DateTime @default(now())
+}
+
+model Appointment {
+  id        String   @id @default(uuid())
+  patientId String
+  patient   Patient  @relation(fields: [patientId], references: [id])
+  doctorId  String
+  doctor    User     @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  
+  startTime DateTime
+  notes     String?
+  status    String   @default("SCHEDULED") // SCHEDULED, COMPLETED, CANCELLED
+  
+  createdAt DateTime @default(now())
+}
+
+model Case {
+  id                 String   @id @default(uuid())
+  procedureName      String
+  duration           String
+  cptCode            String
+  icdCode            String
+  scribeNote         String
+  
+  // Relations
+  doctorId           String
+  doctor             User     @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  patientId          String
+  patient            Patient  @relation(fields: [patientId], references: [id])
+  
+  // AI JSON Blobs
+  steps              String
+  instruments        String
+  roiMetrics         String
+  patientFollowUp    String
+  surgeonPerformance String
+  screenshots        String   @default("[]") // JSON array of image URLs
+  
+  // Massive Reports
+  researchPaper      String   @default("")
+  financialReport    String   @default("")
+  forensicReport     String   @default("")
+  teachingPaper      String   @default("")
+  billingReport      String   @default("")
+
+  // New Enhanced Modules
+  insuranceAudit     String   @default("")
+  surgicalNotes      String   @default("")
+  adminReview        String?
+  reviewStatus       String   @default("PENDING") // PENDING, REVIEWED
+  rating             Int?     // 0-100 score
+
+  // Live Procedural Data
+  isLive             Boolean  @default(false)
+  surgicalState      String   @default("{}") // Persistent Phase/Landmark JSON
+  recordingUrl       String   @default("")
+
+  // Surgical Analyzer (Objective Performance Profiling)
+  motionStability    Float?   @default(0.0)
+  dissectionSafety   Float?   @default(0.0)
+  bleedingRisk       Float?   @default(0.0)
+  clipStability      Float?   @default(0.0)
+  cvsProxy           Float?   @default(0.0)
+  visualTelemetry    String   @default("{}") // JSON: {brightness, sharpness, frameVariation}
+  overallScore       Float?   @default(0.0)
+
+  createdAt          DateTime @default(now())
+}
+
+model Job {
+  id        String   @id @default(uuid())
+  status    String   @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
+  progress  Int      @default(0)
+  filename  String?
+  videoUrl  String?
+  error     String?
+  
+  // Relations
+  doctorId  String
+  doctor    User     @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  caseId    String? // ID of the resulting Case, if successfully generated
+  patientId String? // Associated patient for autonomous synthesis
+
+  createdAt DateTime @default(now())
+}
+
+model InventoryItem {
+  id          String   @id @default(uuid())
+  name        String
+  category    String   // SUTURES, BLADES, STAPLERS, etc.
+  quantity    Int      @default(0)
+  minQuantity Int      @default(5)
+  unit        String   @default("UNITS")
+  status      String   @default("IN_STOCK") // IN_STOCK, LOW_STOCK, OUT_OF_STOCK
+  
+  hospitalId  String
+  hospital    Hospital @relation(fields: [hospitalId], references: [id])
+  
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  action      String   // LOGIN, CASE_UPLOAD, INVENTORY_CHANGE, DOCTOR_INVITE
+  description String
+  ipAddress   String?
+  userAgent   String?
+  
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  hospitalId  String
+  hospital    Hospital @relation(fields: [hospitalId], references: [id])
+  
+  createdAt   DateTime @default(now())
+}
+
