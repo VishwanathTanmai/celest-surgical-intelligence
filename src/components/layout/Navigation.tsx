@@ -19,7 +19,8 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
-  UserPlus
+  UserPlus,
+  FileText
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -33,12 +34,14 @@ const DOCTOR_NAV = [
   { icon: BarChart3, label: "Personal Analytics", href: "/analytics" },
   { icon: History, label: "My Case Archives", href: "/archives" },
   { icon: Users, label: "Patient Registry", href: "/patients" },
+  { icon: FileText, label: "Hospital EMR", href: "/clinical/emr" },
 ];
 
 const ADMIN_NAV = [
   { icon: Layers, label: "Hospital Dashboard", href: "/admin" },
   { icon: Users, label: "Doctor Oversight", href: "/admin/doctors" },
   { icon: Database, label: "Clinical Inventory", href: "/admin/inventory" },
+  { icon: FileText, label: "Hospital EMR", href: "/clinical/emr" },
   { icon: ShieldCheck, label: "Security & Audit", href: "/admin/security" },
 ];
 

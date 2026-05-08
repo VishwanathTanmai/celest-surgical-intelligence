@@ -61,6 +61,7 @@ model User {
   jobs         Job[]
   appointments Appointment[]
   auditLogs    AuditLog[]
+  emrRecords   EMRRecord[]
   
   createdAt    DateTime @default(now())
 }
@@ -78,6 +79,7 @@ model Patient {
   
   cases             Case[]
   appointments      Appointment[]
+  emrRecords        EMRRecord[]
   
   createdAt         DateTime @default(now())
 }
@@ -136,6 +138,8 @@ model Case {
   isLive             Boolean  @default(false)
   surgicalState      String   @default("{}") // Persistent Phase/Landmark JSON
   recordingUrl       String   @default("")
+  estimatedBloodLoss Float?   @default(0.0) // Holoscan real-time inference
+  realTimeStats      String   @default("{}") // WebSocket streaming state (HR, BP, etc)
 
   // Surgical Analyzer (Objective Performance Profiling)
   motionStability    Float?   @default(0.0)
@@ -198,3 +202,22 @@ model AuditLog {
   createdAt   DateTime @default(now())
 }
 
+model EMRRecord {
+  id              String   @id @default(uuid())
+  patientId       String
+  patient         Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctorId        String
+  doctor          User     @relation(fields: [doctorId], references: [id])
+  
+  clinicalNotes   String   @default("")
+  vitals          String   @default("{}") // JSON: { heartRate, bloodPressure, temperature, spo2 }
+  prescriptions   String   @default("[]") // JSON array of medications
+  labResults      String   @default("[]") // JSON array of lab reports
+  
+  // PyHealth Analytics
+  pyhealthRiskScore Float? @default(0.0)
+  pyhealthInsights  String @default("{}") // JSON predictions
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}

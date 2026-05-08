@@ -22,6 +22,8 @@ import { motion, AnimatePresence } from "framer-motion";
 export default function AdminDashboard() {
    const [doctors, setDoctors] = useState<any[]>([]);
    const [stats, setStats] = useState<any>(null);
+   const [pyHealthStats, setPyHealthStats] = useState<any>(null);
+   const [liveSurgeries, setLiveSurgeries] = useState<any>({});
    const [loading, setLoading] = useState(true);
    const [showInvite, setShowInvite] = useState(false);
    const [selectedCase, setSelectedCase] = useState<any>(null);
@@ -66,7 +68,34 @@ export default function AdminDashboard() {
       loadData();
       
       const interval = setInterval(reload, 10000); 
-      return () => clearInterval(interval);
+      
+      // PyHealth Analytics
+      async function loadPyHealth() {
+         try {
+             const res = await fetch("http://localhost:8000/api/pyhealth/stats");
+             const data = await res.json();
+             setPyHealthStats(data);
+         } catch (e) {
+             console.error("PyHealth engine offline:", e);
+         }
+      }
+      loadPyHealth();
+
+      // Real-Time Holoscan WebSocket Sync
+      const ws = new WebSocket("ws://localhost:8000/ws/surgery");
+      ws.onmessage = (event) => {
+         try {
+            const data = JSON.parse(event.data);
+            if (data.type === "SURGERY_UPDATE") {
+               setLiveSurgeries((prev: any) => ({ ...prev, [data.caseId]: data }));
+            }
+         } catch(e) {}
+      };
+
+      return () => {
+         clearInterval(interval);
+         ws.close();
+      };
    }, []);
 
    useEffect(() => {
@@ -165,18 +194,18 @@ export default function AdminDashboard() {
                         <UserPlus size={14} /> Invite Practitioner
                      </button>
                   </div>
-               </div>               {/* Stats Overview */}
-               <div className="grid grid-cols-4 gap-6">
+               </div>               <div className="grid grid-cols-5 gap-6">
                   {[
                      { icon: Activity, label: "Total Cases", value: stats?.totalCases || "0", trend: "+12%", color: "text-surgical-blue" },
+                     { icon: Zap, label: "Live Surgeries", value: Object.keys(liveSurgeries).length.toString(), trend: "Real-Time", color: "text-surgical-crimson" },
                      { icon: TrendingUp, label: "Efficiency", value: stats?.efficiency || "0%", trend: "+5%", color: "text-surgical-teal" },
-                     { icon: DollarSign, label: "Optimization", value: stats?.revenue || "₹0", trend: "+18%", color: "text-white" },
+                     { icon: ShieldCheck, label: "AI Safety Score", value: pyHealthStats?.avgSafetyScore ? `${(pyHealthStats.avgSafetyScore).toFixed(1)}%` : "N/A", trend: "PyHealth", color: "text-white" },
                      { icon: CheckCircle2, label: "Compliance", value: stats?.compliance || "100%", trend: "Stable", color: "text-surgical-blue" },
                   ].map((stat, i) => (
                      <GlassCard key={i} className="p-6 border-white/5 bg-white/[0.01]">
                         <div className="flex items-start justify-between mb-4">
                            <div className={cn("p-2 rounded-xl bg-white/5", stat.color)}><stat.icon size={20} /></div>
-                           <span className="text-[10px] font-bold text-surgical-teal bg-surgical-teal/10 px-2 py-0.5 rounded-full">{stat.trend}</span>
+                           <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full", stat.color.replace('text', 'bg').replace('text', 'text') + "/10", stat.color)}>{stat.trend}</span>
                         </div>
                         <p className="text-[10px] text-white/40 uppercase tracking-widest mb-1">{stat.label}</p>
                         <p className="text-2xl font-bold">{stat.value}</p>
@@ -210,7 +239,10 @@ export default function AdminDashboard() {
                               </thead>
                               <tbody className="divide-y divide-white/5">
                                  {doctors?.map((doc: any) => {
-                                    const score = (doc.peerRating || 4.5) * 20;
+                                    const score = doc.stats?.overallScore || (doc.peerRating || 4.5) * 20;
+                                    const dissectionSafety = doc.stats?.dissectionSafety || 85;
+                                    const cvsProxy = doc.stats?.cvsProxy || 92;
+                                    const bleedingRisk = doc.stats?.bleedingRisk || 8;
                                     return (
                                        <tr key={doc.id} className="hover:bg-white/[0.02] transition-colors group">
                                           <td className="px-6 py-4">
@@ -226,18 +258,27 @@ export default function AdminDashboard() {
                                              <span className="text-xs font-black text-surgical-teal">{score.toFixed(1)}%</span>
                                           </td>
                                           <td className="px-6 py-4">
-                                             <div className="w-24 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                                <div className="h-full bg-surgical-blue" style={{ width: '85%' }} />
+                                             <div className="flex items-center gap-2">
+                                                <div className="w-24 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                                                   <div className="h-full bg-surgical-blue" style={{ width: `${dissectionSafety}%` }} />
+                                                </div>
+                                                <span className="text-[9px] text-white/40">{dissectionSafety.toFixed(0)}%</span>
                                              </div>
                                           </td>
                                           <td className="px-6 py-4">
-                                             <div className="w-24 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                                <div className="h-full bg-surgical-teal" style={{ width: '92%' }} />
+                                             <div className="flex items-center gap-2">
+                                                <div className="w-24 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                                                   <div className="h-full bg-surgical-teal" style={{ width: `${cvsProxy}%` }} />
+                                                </div>
+                                                <span className="text-[9px] text-white/40">{cvsProxy.toFixed(0)}%</span>
                                              </div>
                                           </td>
                                           <td className="px-6 py-4">
-                                             <div className="w-24 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                                <div className="h-full bg-surgical-crimson" style={{ width: '08%' }} />
+                                             <div className="flex items-center gap-2">
+                                                <div className="w-24 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                                                   <div className="h-full bg-surgical-crimson" style={{ width: `${bleedingRisk}%` }} />
+                                                </div>
+                                                <span className="text-[9px] text-white/40">{bleedingRisk.toFixed(0)}%</span>
                                              </div>
                                           </td>
                                           <td className="px-6 py-4 text-right">

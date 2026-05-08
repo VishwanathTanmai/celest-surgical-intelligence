@@ -72,7 +72,7 @@ interface SurgicalContextType {
   setVideoUrl: (url: string | null) => void;
   setDoctorProfile: (profile: DoctorProfile) => void;
   setLastRegisteredPatient: (patient: any | null) => void;
-  startAnalysis: (file: File, patientId: string, screenshots?: string[]) => Promise<void>;
+  startAnalysis: (file: File | null, patientId: string, screenshots?: string[]) => Promise<void>;
   refreshQuota: () => void;
   resetQuota: () => void;
   clearError: () => void;
