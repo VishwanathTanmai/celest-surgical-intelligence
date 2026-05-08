@@ -5,7 +5,7 @@ import { SurgicalPlayer } from "@/components/dashboard/SurgicalPlayer";
 import { AIDetector, StepSegmentation } from "@/components/dashboard/AIDetector";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { motion } from "framer-motion";
-import { Calendar, Activity, Clock, User, Hash, Stethoscope, ArrowUpRight, TrendingUp, DollarSign, BarChart3, Heart, Building2, Search, BookOpen, Table, FileText, Shield, GraduationCap, X, Copy, Download, Radio, RefreshCw, Circle, ChevronRight, Edit3, Trash2, Microscope } from "lucide-react";
+import { Calendar, Activity, Clock, User, Hash, Stethoscope, ArrowUpRight, TrendingUp, DollarSign, BarChart3, Heart, Building2, Search, BookOpen, Table, FileText, Shield, GraduationCap, X, Copy, Download, Radio, RefreshCw, Circle, ChevronRight, Edit3, Trash2, Microscope, Gauge } from "lucide-react";
 import { SurgicalAnalyzer } from "@/components/dashboard/SurgicalAnalyzer";
 import { useSurgical } from "@/context/SurgicalContext";
 import { useState, useEffect, useMemo, useRef } from "react";
