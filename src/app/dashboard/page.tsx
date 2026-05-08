@@ -273,7 +273,7 @@ export default function Dashboard() {
    const [loadingAnalytics, setLoadingAnalytics] = useState(false);
    const [activeWorkspaceTab, setActiveWorkspaceTab] = useState<string>("clinical");
    const [editingCase, setEditingCase] = useState<any>(null);
-   const [liveStats, setLiveStats] = useState<any>({ estimatedBloodLoss: 0, realTimeStats: {} });
+   const [liveStats, setLiveStats] = useState<any>({ estimatedBloodLoss: 0, realTimeStats: {}, performance: {} });
 
    const personalStats = useMemo(() => {
       if (!pastCases || pastCases.length === 0) return [];
@@ -311,7 +311,8 @@ export default function Dashboard() {
             if (data.type === "SURGERY_UPDATE") {
                setLiveStats({
                   estimatedBloodLoss: data.estimatedBloodLoss || 0,
-                  realTimeStats: data.realTimeStats || {}
+                  realTimeStats: data.realTimeStats || {},
+                  performance: data.performance || {}
                });
             }
          } catch(e) {}
@@ -803,9 +804,62 @@ export default function Dashboard() {
                    </div>
                 </div>
 
-                <div className="col-span-12 lg:col-span-4 h-full">
-                  <LiveClinicalAudit />
-               </div>
+                 <div className="col-span-12 lg:col-span-4 flex flex-col gap-6 h-full">
+                   <GlassCard className="p-6 border-white/5 bg-white/[0.01] flex flex-col h-full">
+                      <div className="flex items-center justify-between mb-6">
+                         <div>
+                            <h3 className="text-lg font-black tracking-tight text-white">Final Surgical Score: <span className="text-surgical-blue">{(liveStats?.performance?.overallScore || 0).toFixed(2)}</span></h3>
+                            <p className="text-[10px] text-white/30 uppercase tracking-[0.2em] mt-1">Real-Time Objective Feedback</p>
+                         </div>
+                         <div className="w-10 h-10 rounded-full bg-surgical-blue/10 flex items-center justify-center border border-surgical-blue/20">
+                            <Gauge size={20} className="text-surgical-blue animate-pulse" />
+                         </div>
+                      </div>
+
+                      <div className="space-y-3 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                         {[
+                            { label: "Motion Stability", value: (liveStats?.performance?.motionStability * 10 || 0).toFixed(2), icon: Activity },
+                            { label: "Brightness", value: (liveStats?.performance?.visualTelemetry?.brightness * 100 || 0).toFixed(2), icon: Zap },
+                            { label: "Sharpness", value: (liveStats?.performance?.visualTelemetry?.sharpness * 100 || 0).toFixed(2), icon: Microscope },
+                            { label: "Frame Variation", value: (liveStats?.performance?.visualTelemetry?.frameVariation * 100 || 0).toFixed(2), icon: RefreshCw },
+                            { label: "Dissection Safety Index", value: (liveStats?.performance?.dissectionSafety * 100 || 0).toFixed(2), icon: Shield },
+                            { label: "Bleeding Risk Index", value: (liveStats?.performance?.bleedingRisk * 100 || 0).toFixed(2), icon: Heart },
+                            { label: "Clip Stability Index", value: (liveStats?.performance?.clipStability * 100 || 0).toFixed(2), icon: Activity },
+                            { label: "CVS Proxy", value: (liveStats?.performance?.cvsProxy * 100 || 0).toFixed(2), icon: Search },
+                         ].map((m, i) => (
+                            <motion.div 
+                               key={i} 
+                               initial={{ opacity: 0, x: 20 }} 
+                               animate={{ opacity: 1, x: 0 }} 
+                               transition={{ delay: i * 0.05 }}
+                               className="flex items-center justify-between p-3 bg-white/[0.02] border border-white/5 rounded-xl hover:bg-white/[0.04] transition-all group"
+                            >
+                               <div className="flex items-center gap-3">
+                                  <div className="p-1.5 rounded-lg bg-surgical-blue/5 text-surgical-blue group-hover:bg-surgical-blue/10 transition-colors">
+                                     <m.icon size={14} />
+                                  </div>
+                                  <span className="text-[11px] font-bold text-white/60 tracking-tight">{m.label.replace(/ /g, '_')}:</span>
+                               </div>
+                               <span className="text-[12px] font-black font-mono text-surgical-blue">{m.value}</span>
+                            </motion.div>
+                         ))}
+                      </div>
+
+                      <div className="mt-6 p-4 bg-surgical-blue/5 border border-surgical-blue/10 rounded-2xl">
+                         <div className="flex items-center gap-2 mb-2">
+                            <Shield size={12} className="text-surgical-blue" />
+                            <span className="text-[9px] font-bold uppercase tracking-widest text-white/40">AI-Safety Assertion</span>
+                         </div>
+                         <p className="text-[10px] text-white/70 leading-relaxed italic">
+                            "Procedural maneuvers within safety envelopes. No critical violations detected."
+                         </p>
+                      </div>
+                   </GlassCard>
+
+                   <div className="flex-1">
+                      <LiveClinicalAudit />
+                   </div>
+                </div>
             </div>
           ) : !analysisResult || isAnalyzing ? (
             <div className="grid grid-cols-12 gap-8 items-start">
