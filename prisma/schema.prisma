@@ -150,6 +150,14 @@ model Case {
   visualTelemetry    String   @default("{}") // JSON: {brightness, sharpness, frameVariation}
   overallScore       Float?   @default(0.0)
 
+  // Bleeding Intelligence (ERIF-V2 Module)
+  bleedingDetected   Boolean  @default(false)
+  approxBloodLoss    Float?   @default(0.0) // in mL
+  bleedingDuration   String   @default("0s")
+  bleedingLocations  String   @default("[]") // JSON array of anatomical sites
+  maxBleedingTime    String   @default("00:00")
+  bleedingIntensityGraph String @default("[]") // JSON array for step-by-step visualization
+
   createdAt          DateTime @default(now())
 }
 

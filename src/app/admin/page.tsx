@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Sidebar, Navbar } from "@/components/layout/Navigation";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { 
@@ -18,6 +18,11 @@ import {
 } from "../clinical/actions";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { 
+   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, 
+   CartesianGrid, Tooltip, Legend, Cell, Radar, RadarChart, 
+   PolarGrid, PolarAngleAxis, PolarRadiusAxis 
+} from "recharts";
 
 export default function AdminDashboard() {
    const [doctors, setDoctors] = useState<any[]>([]);
@@ -40,6 +45,36 @@ export default function AdminDashboard() {
    const [loadingHistory, setLoadingHistory] = useState(false);
    const [error, setError] = useState<string | null>(null);
    const [isDispatching, setIsDispatching] = useState(false);
+
+   const performanceData = useMemo(() => {
+      if (!doctors || doctors.length === 0) return [];
+      return doctors.map(doc => ({
+         name: doc.name.split(' ').pop(),
+         overall: doc.stats?.overallScore || 0,
+         safety: doc.stats?.dissectionSafety || 0,
+         cvs: doc.stats?.cvsProxy || 0,
+         bleeding: doc.stats?.bleedingRisk || 0,
+      }));
+   }, [doctors]);
+
+   const aggregateStats = useMemo(() => {
+      if (!doctors || doctors.length === 0) return [];
+      const totals = doctors.reduce((acc, doc) => ({
+         safety: acc.safety + (doc.stats?.dissectionSafety || 0),
+         cvs: acc.cvs + (doc.stats?.cvsProxy || 0),
+         bleeding: acc.bleeding + (doc.stats?.bleedingRisk || 0),
+         overall: acc.overall + (doc.stats?.overallScore || 0),
+      }), { safety: 0, cvs: 0, bleeding: 0, overall: 0 });
+      
+      const count = doctors.length;
+      return [
+         { subject: 'Safety', A: totals.safety / count, fullMark: 100 },
+         { subject: 'CVS Proxy', A: totals.cvs / count, fullMark: 100 },
+         { subject: 'Hemostasis', A: (100 - (totals.bleeding / count)), fullMark: 100 },
+         { subject: 'Stability', A: 88, fullMark: 100 }, // Mocked or add to schema later
+         { subject: 'Technique', A: totals.overall / count, fullMark: 100 },
+      ];
+   }, [doctors]);
 
    async function reload() {
       try {
@@ -207,11 +242,59 @@ export default function AdminDashboard() {
                            <div className={cn("p-2 rounded-xl bg-white/5", stat.color)}><stat.icon size={20} /></div>
                            <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full", stat.color.replace('text', 'bg').replace('text', 'text') + "/10", stat.color)}>{stat.trend}</span>
                         </div>
+
                         <p className="text-[10px] text-white/40 uppercase tracking-widest mb-1">{stat.label}</p>
                         <p className="text-2xl font-bold">{stat.value}</p>
                      </GlassCard>
                   ))}
                </div>
+
+               {view === "performance" && (
+                  <div className="grid grid-cols-12 gap-6 animate-in fade-in slide-in-from-bottom-5 duration-700">
+                     <GlassCard className="col-span-8 p-6 border-white/5 bg-white/[0.01]">
+                        <div className="flex items-center justify-between mb-8">
+                           <div>
+                              <h3 className="text-sm font-black uppercase tracking-widest text-white/80">Cross-Practitioner Benchmarking</h3>
+                              <p className="text-[9px] text-white/30 uppercase tracking-tighter">Objective Metric Distribution (ERIF-V2)</p>
+                           </div>
+                           <div className="flex items-center gap-4">
+                              <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-surgical-blue" /><span className="text-[8px] text-white/40 uppercase font-bold">Safety</span></div>
+                              <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-surgical-teal" /><span className="text-[8px] text-white/40 uppercase font-bold">CVS Proxy</span></div>
+                           </div>
+                        </div>
+                        <div className="h-[300px] w-full">
+                           <ResponsiveContainer width="100%" height="100%">
+                              <BarChart data={performanceData}>
+                                 <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#ffffff20', fontSize: 10 }} />
+                                 <YAxis axisLine={false} tickLine={false} tick={{ fill: '#ffffff20', fontSize: 10 }} />
+                                 <Tooltip 
+                                    contentStyle={{ backgroundColor: '#0a0a0a', border: '1px solid #ffffff10', borderRadius: '12px' }}
+                                    itemStyle={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }}
+                                 />
+                                 <Bar dataKey="safety" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={20} />
+                                 <Bar dataKey="cvs" fill="#2dd4bf" radius={[4, 4, 0, 0]} barSize={20} />
+                              </BarChart>
+                           </ResponsiveContainer>
+                        </div>
+                     </GlassCard>
+
+                     <GlassCard className="col-span-4 p-6 border-white/5 bg-white/[0.01]">
+                        <h3 className="text-sm font-black uppercase tracking-widest text-white/80 mb-8">Institutional Competency</h3>
+                        <div className="h-[300px] w-full">
+                           <ResponsiveContainer width="100%" height="100%">
+                              <RadarChart cx="50%" cy="50%" outerRadius="80%" data={aggregateStats}>
+                                 <PolarGrid stroke="#ffffff10" />
+                                 <PolarAngleAxis dataKey="subject" tick={{ fill: '#ffffff40', fontSize: 10 }} />
+                                 <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                                 <Radar name="Institutional Average" dataKey="A" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.3} />
+                                 <Tooltip contentStyle={{ backgroundColor: '#0a0a0a', border: '1px solid #ffffff10', borderRadius: '12px' }} />
+                              </RadarChart>
+                           </ResponsiveContainer>
+                        </div>
+                     </GlassCard>
+                  </div>
+               )}
 
                {view === "performance" && (
                   <div className="animate-in fade-in slide-in-from-bottom-5 duration-1000">

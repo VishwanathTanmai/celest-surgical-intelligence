@@ -55,6 +55,23 @@ export interface AnalysisResult {
   reviewStatus?: string;
   adminReview?: string;
   screenshots?: string;
+  
+  // Bleeding Intelligence (ERIF-V2 Module)
+  bleedingDetected?: boolean;
+  approxBloodLoss?: number;
+  bleedingDuration?: string;
+  bleedingLocations?: string; // JSON string
+  maxBleedingTime?: string;
+  bleedingIntensityGraph?: string; // JSON string
+
+  // Surgical Analyzer (Objective Metrics)
+  motionStability?: number;
+  dissectionSafety?: number;
+  bleedingRisk?: number;
+  clipStability?: number;
+  cvsProxy?: number;
+  visualTelemetry?: string; // JSON string
+  overallScore?: number;
 }
 
 interface SurgicalContextType {

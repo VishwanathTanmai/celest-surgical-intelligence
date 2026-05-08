@@ -124,6 +124,14 @@ export async function POST(request: NextRequest) {
              visualTelemetry: JSON.stringify(analysis.surgicalAnalyzer?.visualTelemetry || {}),
              overallScore: analysis.surgicalAnalyzer?.overallScore || 0.0,
 
+             // Bleeding Intelligence (ERIF-V2 Mapping)
+             bleedingDetected: analysis.surgicalAnalyzer?.bleedingIntelligence?.detected || false,
+             approxBloodLoss: analysis.surgicalAnalyzer?.bleedingIntelligence?.approxBloodLoss || 0.0,
+             bleedingDuration: analysis.surgicalAnalyzer?.bleedingIntelligence?.duration || "0s",
+             bleedingLocations: JSON.stringify(analysis.surgicalAnalyzer?.bleedingIntelligence?.locations || []),
+             maxBleedingTime: analysis.surgicalAnalyzer?.bleedingIntelligence?.maxBleedingTime || "00:00",
+             bleedingIntensityGraph: JSON.stringify(analysis.surgicalAnalyzer?.bleedingIntelligence?.intensityGraph || []),
+
              doctorId: doctorId,
              patientId: patientId
           }

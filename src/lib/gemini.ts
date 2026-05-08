@@ -136,8 +136,14 @@ Identify any implants used (name, serial format, count) and clinical adherence t
 TASK 8: Surgical Procedure Notes (surgicalNotes)
 Formal procedural documentation for the hospital record, focusing on technique and precision.
 
-TASK 9: Surgical Analyzer Performance Profile (Analyzer Metrics)
-EXHAUSTIVELY analyze the surgical video for objective performance metrics. This is aligned with our work on Ethically Reflexive AI (ERIF). Provide numerical scores (0.0 to 1.0) and technical justifications.
+TASK 10: Bleeding Intelligence (ERIF-V2 Mandatory Check)
+First, determine if any bleeding occurred during the procedure.
+ONLY if bleeding was detected, provide:
+1. Approximate blood loss (in mL).
+2. Duration of bleeding (total active bleeding time).
+3. List of anatomical locations where bleeding occurred.
+4. Timestamp (HH:MM) at which peak bleeding intensity happened.
+5. Bleeding intensity data points for every identified surgical step (0.0 to 1.0).
 
 Return EXACTLY valid JSON matching this schema:
 {
@@ -168,6 +174,14 @@ Return EXACTLY valid JSON matching this schema:
       "brightness": 0.88,
       "sharpness": 0.95,
       "frameVariation": 0.12
+    },
+    "bleedingIntelligence": {
+      "detected": true,
+      "approxBloodLoss": 45.5,
+      "duration": "12m 30s",
+      "locations": ["Cystic Artery Bed", "Liver Surface"],
+      "maxBleedingTime": "14:22",
+      "intensityGraph": [{"step": "Gallbladder Dissection", "intensity": 0.4}, {"step": "Artery Ligation", "intensity": 0.8}]
     },
     "overallScore": 91.5
   }

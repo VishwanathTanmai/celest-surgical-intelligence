@@ -5,10 +5,11 @@ import { GlassCard } from "@/components/ui/GlassCard";
 import { 
     Activity, ShieldCheck, AlertTriangle, Zap, 
     Maximize2, Eye, Gauge, Hexagon, BarChart3,
-    CloudLightning, Search, Workflow, Target
+    CloudLightning, Search, Workflow, Target, Droplets, Clock, MapPin, TrendingUp
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, AreaChart, Area } from "recharts";
 
 interface AnalyzerProps {
     data: {
@@ -21,6 +22,14 @@ interface AnalyzerProps {
             brightness: number;
             sharpness: number;
             frameVariation: number;
+        };
+        bleedingIntelligence?: {
+            detected: boolean;
+            approxBloodLoss: number;
+            duration: string;
+            locations: string[];
+            maxBleedingTime: string;
+            intensityGraph: { step: string, intensity: number }[];
         };
         overallScore: number;
     } | null;
@@ -48,8 +57,10 @@ export function SurgicalAnalyzer({ data }: AnalyzerProps) {
         { label: "Frame Dynamic", value: data.visualTelemetry.frameVariation, icon: BarChart3 },
     ];
 
+    const bleeding = data.bleedingIntelligence;
+
     return (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-1000 pb-20">
             {/* Header: Score & ERIF Banner */}
             <div className="flex items-center justify-between">
                 <div>
@@ -58,7 +69,7 @@ export function SurgicalAnalyzer({ data }: AnalyzerProps) {
                         Surgical Performance Hub
                     </h2>
                     <p className="text-[9px] text-white/40 uppercase tracking-[0.2em] font-mono mt-1">
-                        Ethically Reflexive AI (ERIF-V1) • Objective Kinetic Evaluation
+                        Ethically Reflexive AI (ERIF-V2) • Objective Kinetic Evaluation
                     </p>
                 </div>
                 <div className="flex items-center gap-4 bg-white/5 p-1 rounded-2xl border border-white/5">
@@ -153,6 +164,112 @@ export function SurgicalAnalyzer({ data }: AnalyzerProps) {
                         </div>
                     </GlassCard>
                 </div>
+
+                {/* Bleeding Intelligence Module (New ERIF-V2) */}
+                {bleeding?.detected && (
+                    <div className="col-span-12 grid grid-cols-12 gap-6 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+                        <GlassCard className="col-span-12 p-8 border-surgical-crimson/20 bg-surgical-crimson/[0.01]">
+                            <div className="flex items-center justify-between mb-8">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 rounded-2xl bg-surgical-crimson/10 text-surgical-crimson">
+                                        <Droplets size={24} className="animate-pulse" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-black uppercase tracking-widest text-surgical-crimson">Bleeding Intelligence Summary</h3>
+                                        <p className="text-[10px] text-white/30 uppercase tracking-[0.2em] font-mono mt-1">Clinical Hemostatic Evaluation • Active Event Detected</p>
+                                    </div>
+                                </div>
+                                <div className="flex gap-4">
+                                    <div className="px-6 py-3 bg-white/5 rounded-2xl border border-white/5 text-center">
+                                        <p className="text-[8px] text-white/30 uppercase font-black mb-1">Approx. Blood Loss</p>
+                                        <p className="text-lg font-black text-white">{bleeding.approxBloodLoss} <span className="text-xs font-normal text-white/40">mL</span></p>
+                                    </div>
+                                    <div className="px-6 py-3 bg-white/5 rounded-2xl border border-white/5 text-center">
+                                        <p className="text-[8px] text-white/30 uppercase font-black mb-1">Max Intensity Time</p>
+                                        <p className="text-lg font-black text-white">{bleeding.maxBleedingTime}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-12 gap-8">
+                                <div className="col-span-4 space-y-6">
+                                    <div className="p-6 bg-white/[0.02] rounded-2xl border border-white/5">
+                                        <div className="flex items-center gap-2 mb-4 text-white/40">
+                                            <Clock size={14} />
+                                            <span className="text-[10px] font-black uppercase tracking-widest">Duration of Bleeding</span>
+                                        </div>
+                                        <p className="text-2xl font-black text-white tracking-tighter">{bleeding.duration}</p>
+                                    </div>
+
+                                    <div className="p-6 bg-white/[0.02] rounded-2xl border border-white/5">
+                                        <div className="flex items-center gap-2 mb-4 text-white/40">
+                                            <MapPin size={14} />
+                                            <span className="text-[10px] font-black uppercase tracking-widest">Anatomical Locations</span>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                            {bleeding.locations.map((loc, i) => (
+                                                <span key={i} className="px-3 py-1 bg-surgical-crimson/10 border border-surgical-crimson/20 text-surgical-crimson text-[9px] font-black uppercase tracking-widest rounded-lg">
+                                                    {loc}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="col-span-8 p-6 bg-white/[0.02] rounded-2xl border border-white/5 min-h-[300px]">
+                                    <div className="flex items-center justify-between mb-6">
+                                        <div className="flex items-center gap-2 text-white/40">
+                                            <TrendingUp size={14} />
+                                            <span className="text-[10px] font-black uppercase tracking-widest">Bleeding Intensity Graph 📈</span>
+                                        </div>
+                                        <span className="text-[8px] font-mono text-white/20 uppercase">Real-Time Volumetric Inference</span>
+                                    </div>
+                                    
+                                    <div className="h-[220px] w-full">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <AreaChart data={bleeding.intensityGraph}>
+                                                <defs>
+                                                    <linearGradient id="colorIntensity" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="5%" stopColor="#ff2d55" stopOpacity={0.3}/>
+                                                        <stop offset="95%" stopColor="#ff2d55" stopOpacity={0}/>
+                                                    </linearGradient>
+                                                </defs>
+                                                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                                                <XAxis 
+                                                    dataKey="step" 
+                                                    axisLine={false} 
+                                                    tickLine={false} 
+                                                    tick={{ fill: '#ffffff20', fontSize: 8 }} 
+                                                    interval={0}
+                                                />
+                                                <YAxis 
+                                                    axisLine={false} 
+                                                    tickLine={false} 
+                                                    tick={{ fill: '#ffffff20', fontSize: 8 }} 
+                                                    domain={[0, 1]}
+                                                />
+                                                <Tooltip 
+                                                    contentStyle={{ backgroundColor: '#0a0a0a', border: '1px solid #ffffff10', borderRadius: '12px' }}
+                                                    itemStyle={{ color: '#ff2d55', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }}
+                                                    labelStyle={{ color: '#ffffff40', fontSize: '8px', marginBottom: '4px' }}
+                                                />
+                                                <Area 
+                                                    type="monotone" 
+                                                    dataKey="intensity" 
+                                                    stroke="#ff2d55" 
+                                                    strokeWidth={3}
+                                                    fillOpacity={1} 
+                                                    fill="url(#colorIntensity)" 
+                                                    animationDuration={2000}
+                                                />
+                                            </AreaChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </div>
+                            </div>
+                        </GlassCard>
+                    </div>
+                )}
             </div>
         </div>
     );

@@ -87,6 +87,23 @@ export async function getJob(id: string): Promise<SurgicalJob | undefined> {
         roiMetrics: safeParse(dbCase.roiMetrics, {}),
         patientFollowUp: safeParse(dbCase.patientFollowUp, []),
         surgeonPerformance: safeParse(dbCase.surgeonPerformance, []),
+
+        // Bleeding Intelligence (ERIF-V2 Mapping)
+        bleedingDetected: dbCase.bleedingDetected,
+        approxBloodLoss: dbCase.approxBloodLoss || 0,
+        bleedingDuration: dbCase.bleedingDuration,
+        bleedingLocations: dbCase.bleedingLocations,
+        maxBleedingTime: dbCase.maxBleedingTime,
+        bleedingIntensityGraph: dbCase.bleedingIntensityGraph,
+
+        // Surgical Analyzer (Objective Metrics)
+        motionStability: dbCase.motionStability || 0,
+        dissectionSafety: dbCase.dissectionSafety || 0,
+        bleedingRisk: dbCase.bleedingRisk || 0,
+        clipStability: dbCase.clipStability || 0,
+        cvsProxy: dbCase.cvsProxy || 0,
+        visualTelemetry: dbCase.visualTelemetry,
+        overallScore: dbCase.overallScore || 0,
       };
     }
   }
